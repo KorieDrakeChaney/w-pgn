@@ -1,0 +1,35 @@
+[Event "Live Chess"]
+[Site "Chess.com"]
+[Date "2024.03.23"]
+[Round "-"]
+[White "vishnu714"]
+[Black "KorieDrakeChaney"]
+[Result "0-1"]
+[CurrentPosition "6k1/p6p/6p1/8/1r6/7P/PP4P1/5K2 w - -"]
+[Timezone "UTC"]
+[ECO "B06"]
+[ECOUrl "https://www.chess.com/openings/Modern-Defense-with-1-e4"]
+[UTCDate "2024.03.23"]
+[UTCTime "10:48:56"]
+[WhiteElo "1669"]
+[BlackElo "1806"]
+[TimeControl "180"]
+[Termination "KorieDrakeChaney won by resignation"]
+[StartTime "10:48:56"]
+[EndDate "2024.03.23"]
+[EndTime "10:52:03"]
+[Link "https://www.chess.com/game/live/104929863989"]
+[WhiteUrl "https://images.chesscomfiles.com/uploads/v1/user/37494966.83e9e84d.50x50o.4293fea47a54.png"]
+[WhiteCountry "69"]
+[WhiteTitle ""]
+[BlackUrl "https://images.chesscomfiles.com/uploads/v1/user/188503321.4634fffb.50x50o.1bb5a04767fa.jpeg"]
+[BlackCountry "2"]
+[BlackTitle ""]
+
+1. e4 g6 2. Bb5 Bg7 3. d4 c6 4. Ba4 e6 5. e5 Ne7 6. Bg5 O-O 7. Nf3 f6 8. exf6
+Bxf6 9. Bh6 Bg7 10. Bg5 Qe8 11. c3 Nf5 12. O-O d5 13. h3 Nd7 14. Nbd2 Nf6 15.
+Bc2 Nd6 16. Ne5 Nfe4 17. Bxe4 Nxe4 18. Nxe4 dxe4 19. Qe2 Rf5 20. f4 exf3 21.
+Nxf3 c5 22. dxc5 Qc6 23. Bh4 Qxc5+ 24. Kh1 Bd7 25. Nd4 Bxd4 26. cxd4 Qb6 27. d5
+Bb5 28. Qc2 Rxf1+ 29. Rxf1 Bxf1 30. dxe6 Qxe6 31. Qc7 Re8 32. Qxb7 Qe4 33. Qxe4
+Rxe4 34. Kg1 Rxh4 35. Kxf1 Rb4 {Game may have continued...} (35... Rb4 36. b3
+Kh8 37. Ke2 Rd4 38. a4 Rd6 39. b4 Rd8 {-4.99}) 0-1

@@ -1,0 +1,10 @@
+[package]
+name = "w-pgn"
+version = "0.1.0"
+edition = "2021"
+authors = ["Korie Drake Chaney"]
+repository = "https://github.com/KorieDrakeChaney/w-pgn"
+keywords = ["chess"]
+readme = "README.md"
+description = "A pgn parser written in Rust"
+license = "MIT"
