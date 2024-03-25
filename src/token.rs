@@ -1,6 +1,6 @@
 use crate::Nag;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     LeftBracket,
     RightBracket,

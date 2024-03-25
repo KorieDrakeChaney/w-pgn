@@ -12,13 +12,14 @@ use tokenizer::Tokenizer;
 #[derive(Debug)]
 pub struct PGN {
     // Seven Tag Roster
-    pub event: String,
-    pub site: String,
-    pub date: String,
-    pub round: String,
-    pub white: String,
-    pub black: String,
-    pub result: String,
+    pub event: Option<String>,
+    pub site: Option<String>,
+    pub date: Option<String>,
+    pub round: Option<String>,
+    pub white: Option<String>,
+    pub black: Option<String>,
+    pub result: Option<String>,
+    pub termination: Option<String>,
 
     pub tags: HashMap<String, String>,
 
@@ -32,7 +33,10 @@ impl PGN {
         PGN::parse_tokens(&tokens)
     }
 
-    pub fn parse_tokens(tokens: &Vec<Token>) -> std::io::Result<Self> {
+    pub fn parse_tokens<T>(tokens: T) -> std::io::Result<Self>
+    where
+        T: AsRef<[Token]>,
+    {
         let mut tags = HashMap::new();
         let mut event = None;
         let mut site = None;
@@ -47,6 +51,10 @@ impl PGN {
         let mut variation_depth = Vec::new();
 
         let mut moves = None;
+
+        let tokens = tokens.as_ref();
+
+        let mut termination = None;
 
         while let Some(token) = tokens.get(index) {
             match token {
@@ -166,7 +174,7 @@ impl PGN {
                 }
 
                 Token::Termination(s) => {
-                    tags.insert("Termination".to_string(), s.clone());
+                    termination = Some(s.clone());
                     break;
                 }
 
@@ -176,53 +184,35 @@ impl PGN {
             }
         }
 
-        if let (
-            Some(event),
-            Some(site),
-            Some(date),
-            Some(round),
-            Some(white),
-            Some(black),
-            Some(result),
-        ) = (event, site, date, round, white, black, result)
-        {
-            Ok(PGN {
-                event,
-                site,
-                date,
-                round,
-                white,
-                black,
-                result,
-                tags,
-                moves,
-            })
-        } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "Missing required tag(s)",
-            ))
-        }
+        Ok(PGN {
+            event,
+            site,
+            date,
+            round,
+            white,
+            black,
+            result,
+            termination,
+            tags,
+            moves,
+        })
     }
 
     pub fn parse_multiple(pgns: &str) -> std::io::Result<Vec<Self>> {
         let mut pgn_vec = Vec::new();
 
-        let all_tokens = Tokenizer::new(pgns).tokens;
+        let tokens = Tokenizer::new(pgns).tokens;
 
-        let mut parseable_tokens = Vec::new();
+        let mut start = 0;
 
-        for token in all_tokens {
+        for (index, token) in tokens.iter().enumerate() {
             match token {
                 Token::Termination(_) => {
-                    if let Ok(pgn) = PGN::parse_tokens(&parseable_tokens) {
-                        pgn_vec.push(pgn);
-                    }
-                    parseable_tokens.clear();
+                    let pgn = PGN::parse_tokens(&tokens[start..=index])?;
+                    pgn_vec.push(pgn);
+                    start = index + 1;
                 }
-                _ => {
-                    parseable_tokens.push(token);
-                }
+                _ => {}
             }
         }
 
@@ -240,37 +230,84 @@ impl PGN {
 
 impl std::fmt::Display for PGN {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[Event \"{}\"]\n", self.event)?;
-        write!(f, "[Site \"{}\"]\n", self.site)?;
-        write!(f, "[Date \"{}\"]\n", self.date)?;
-        write!(f, "[Round \"{}\"]\n", self.round)?;
-        write!(f, "[White \"{}\"]\n", self.white)?;
-        write!(f, "[Black \"{}\"]\n", self.black)?;
-        write!(f, "[Result \"{}\"]\n", self.result)?;
+        if let Some(event) = &self.event {
+            writeln!(f, "[Event \"{}\"]", event)?;
+        } else {
+            writeln!(f, "[Event \"?\"]")?;
+        }
+
+        if let Some(site) = &self.site {
+            writeln!(f, "[Site \"{}\"]", site)?;
+        } else {
+            writeln!(f, "[Site \"?\"]")?;
+        }
+
+        if let Some(date) = &self.date {
+            writeln!(f, "[Date \"{}\"]", date)?;
+        } else {
+            writeln!(f, "[Date \"?\"]")?;
+        }
+
+        if let Some(round) = &self.round {
+            writeln!(f, "[Round \"{}\"]", round)?;
+        } else {
+            writeln!(f, "[Round \"?\"]")?;
+        }
+
+        if let Some(white) = &self.white {
+            writeln!(f, "[White \"{}\"]", white)?;
+        } else {
+            writeln!(f, "[White \"?\"]")?;
+        }
+
+        if let Some(black) = &self.black {
+            writeln!(f, "[Black \"{}\"]", black)?;
+        } else {
+            writeln!(f, "[Black \"?\"]")?;
+        }
+
+        if let Some(result) = &self.result {
+            writeln!(f, "[Result \"{}\"]", result)?;
+        } else {
+            writeln!(f, "[Result \"*\"]")?;
+        }
 
         for (key, value) in &self.tags {
-            write!(f, "[{} \"{}\"]\n", key, value)?;
+            writeln!(f, "[{} \"{}\"]", key, value)?;
         }
 
-        if let Some(moves) = &self.moves {
-            let mut index = 0;
-            let mut turn = 1;
-            let moves = moves.borrow().get_moves();
+        writeln!(f)?;
 
-            while index < moves.len() {
-                if index % 2 == 0 {
-                    write!(f, "{}.", turn)?;
-                    turn += 1;
+        if let Some(termination) = &self.termination {
+            let moves = self.moves();
+
+            let mut buffer = String::new();
+            let mut current_char_count = 0;
+
+            for (index, pair) in moves.chunks(2).enumerate() {
+                let mut move_string = format!("{}.{}", index + 1, pair[0]);
+
+                if pair.len() == 2 {
+                    move_string.push_str(&format!(" {}", pair[1]));
                 }
 
-                write!(f, "{} ", moves[index])?;
+                let len = move_string.len();
 
-                index += 1;
+                if current_char_count + len >= 80 {
+                    buffer.push('\n');
+                    buffer.push_str(&move_string);
+                    current_char_count = len;
+                } else {
+                    if current_char_count > 0 {
+                        buffer.push(' ');
+                        current_char_count += 1;
+                    }
+                    buffer.push_str(&move_string);
+                    current_char_count += len;
+                }
             }
-        }
 
-        if let Some(termination) = &self.tags.get(&"Termination".to_string()) {
-            write!(f, "{}", termination)?;
+            write!(f, "{}  {}", buffer, termination)?;
         }
 
         Ok(())
@@ -345,13 +382,13 @@ mod tests {
 
         let pgn = PGN::parse(pgn_input).unwrap();
 
-        assert_eq!(pgn.event, "F/S Return Match");
-        assert_eq!(pgn.site, "Belgrade, Serbia JUG");
-        assert_eq!(pgn.date, "1992.11.04");
-        assert_eq!(pgn.round, "29");
-        assert_eq!(pgn.white, "Fischer, Robert J.");
-        assert_eq!(pgn.black, "Spassky, Boris V.");
-        assert_eq!(pgn.result, "1/2-1/2");
+        assert_eq!(pgn.event, Some("F/S Return Match".to_string()));
+        assert_eq!(pgn.site, Some("Belgrade, Serbia JUG".to_string()));
+        assert_eq!(pgn.date, Some("1992.11.04".to_string()));
+        assert_eq!(pgn.round, Some("29".to_string()));
+        assert_eq!(pgn.white, Some("Fischer, Robert J.".to_string()));
+        assert_eq!(pgn.black, Some("Spassky, Boris V.".to_string()));
+        assert_eq!(pgn.result, Some("1/2-1/2".to_string()));
 
         if let Some(moves) = pgn.moves {
             moves.borrow().print_tree(0);

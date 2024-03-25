@@ -44,10 +44,9 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn tokenize(&mut self) {
-        'line_loop: while let Some(c) = self.consume() {
+        while let Some(c) = self.consume() {
             match self.current_state {
                 State::Default => match c {
-                    ' ' => continue 'line_loop,
                     '[' => {
                         self.tokens.push(Token::LeftBracket);
                     }
@@ -80,7 +79,7 @@ impl<'a> Tokenizer<'a> {
                     _ => {}
                 },
                 State::Symbol => match c {
-                    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '+' | '#' | '=' | ':' | '-' => {
+                    'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '+' | '#' | '=' | ':' | '-' | '/' => {
                         self.append_to_temporary_buffer(c);
                     }
                     '.' => {
@@ -93,10 +92,13 @@ impl<'a> Tokenizer<'a> {
                         match symbol.as_str() {
                             "0-1" | "1-0" | "1/2-1/2" | "*" => {
                                 self.tokens.push(Token::Termination(symbol));
+                                self.reconsume_in(State::Default);
                             }
                             _ => {
-                                self.tokens.push(Token::Symbol(symbol));
-                                self.reconsume_in(State::Default);
+                                if symbol.len() > 0 {
+                                    self.tokens.push(Token::Symbol(symbol));
+                                    self.reconsume_in(State::Default);
+                                }
                             }
                         }
                     }
