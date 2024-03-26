@@ -267,4 +267,15 @@ mod tests {
 
         println!("{:?}", tokenizer.tokens);
     }
+
+    #[test]
+    fn test_multiple_games() {
+        let mut buffer = String::new();
+
+        let mut file = std::fs::File::open("Abdusattorov.pgn").unwrap();
+
+        file.read_to_string(&mut buffer).unwrap();
+
+        let _tokenizer = Tokenizer::new(&buffer);
+    }
 }
